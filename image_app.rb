@@ -2,13 +2,16 @@ require 'tilt/string'
 require 'rack'
 require 'open-uri'
 require 'rack/singleshot'
-
+require 'optparse'
 
 
 class ImageApp
-  attr_reader :template, :counter
-  def initialize
+  attr_reader :template, :counter, :download_dir, :annotate_script
+  def initialize(opts = {})
     @template = Tilt::StringTemplate.new { ::DATA.read }
+
+    @download_dir    = opts.fetch(:download_dir)
+    @annotate_script = opts.fetch(:annotate_script)
   end
 
   def call(env)
@@ -54,7 +57,7 @@ class ImageApp
       post['s'] ||= src
 
 
-      command = [ENV['ANNOTATE_SCRIPT'] || 'image_annotate.py']
+      command = [annotate_script]
       %w{a d s t}.each do |param|
         if post.has_key?(param)
           command << "-#{param}"
@@ -73,7 +76,7 @@ class ImageApp
 
       r, w = IO.pipe
       re, we = IO.pipe
-      pid = Process.spawn(*command, :in => r, :out => we, :err => we, :chdir => (ENV['DOWNLOAD_DIR'] || File.join(ENV['HOME'], "Downloads")))
+      pid = Process.spawn(*command, :in => r, :out => we, :err => we, :chdir => download_dir)
       r.close
       we.close
       w.write(img)
@@ -143,17 +146,64 @@ class ImageApp
 end
 
 
+Options = Struct.new(:download_dir, :annotate_script, :server, :port, :host)
 
+class Parser
+  def self.parse(options)
+    # set up defaults
+    args = Options.new(
+      ENV['DOWNLOAD_DIR'] || File.join(ENV['HOME'], 'Downloads'),
+      ENV['ANNOTATE_SCRIPT'] || 'image_annotate.py',
+      false,
+      8765,
+      '127.0.0.1'
+    )
+
+    opt_parser = OptionParser.new do |opts|
+      opts.banner = "Usage: #{$0} [options]"
+
+      opts.on("-dDOWNLOAD_DIR", "--download-dir=DOWNLOAD_DIR", "Directory to save files too (defaults to ~/Downloads)") do |d|
+        args.download_dir = d
+      end
+
+      opts.on("-aANNOTATE_SCRIPT", "--annotate-script=ANNOTATE_SCRIPT", "Location of the annotation script (defaults to assuming the script is on the path)") do |a|
+        args.annotate_script = a
+      end
+
+      opts.on("-s","--server", "Run as a persistant server, not a one shot process") do
+        args.server = true
+      end
+
+      opts.on("-pPORT", "--port=PORT", "Port to run persistant server on (Defaults to 8765)") do |port|
+        args.port = port.to_i
+      end
+
+      opts.on("-HHOST", "--host=HOST", "Host for persistant port to listen to (Defaults to localhost)") do |host|
+        args.host = host
+      end
+
+      opts.on("-h", "--help", "Prints this help") do
+        puts opts
+        exit
+      end
+    end
+
+    opt_parser.parse!(options)
+    return args
+  end
+end
 
 if $0 == __FILE__
+  options = Parser.parse ARGV
+
   handler, handler_opts = nil, {}
   builder = Rack::Builder.new
-  builder.run ImageApp.new
-  test = ARGV.first == '-t' ? true : false
+  builder.run ImageApp.new(download_dir: options.download_dir, annotate_script: options.annotate_script)
 
-  if test
+
+  if options.server
     handler      = Rack::Handler.get('webrick')
-    handler_opts = {Port: 8765, Host: '127.0.0.1'}
+    handler_opts = {Port: options.port, Host: options.host}
   else
     handler = Rack::Handler.get('singleshot')
   end
