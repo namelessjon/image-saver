@@ -62,37 +62,11 @@ class ImageApp
         bad_request(image.read)
       end
 
-      # set source from the image path
-      post['s'] ||= src
+      command      = build_command(annotate_script, src, post)
 
+      success, err = spawn(command, img, download_dir)
 
-      command = [annotate_script]
-      %w{a d s t}.each do |param|
-        if post.has_key?(param)
-          command << "-#{param}"
-          command << post[param]
-        end
-      end
-      if post.has_key?('Tags')
-        post['Tags'].split(',').map(&:to_s).each do |tag|
-          tag.strip!
-          command << '-T' << tag unless tag.empty?
-        end
-      end
-      command << '-n' # no gui
-      command << '-o'
-      command << filename(src, post['key'] || 'image')
-
-      r, w = IO.pipe
-      re, we = IO.pipe
-      pid = Process.spawn(*command, :in => r, :out => we, :err => we, :chdir => download_dir)
-      r.close
-      we.close
-      w.write(img)
-      w.close
-      err = re.read
-      pid, status = Process.waitpid2(pid)
-      return bad_request("#{err.inspect}") if status.exitstatus != 0
+      return bad_request("#{src}\n#{err.inspect}") unless success
       response.write('<html><body><script>window.close();</script></body></html>')
     else
       response.status = 405
@@ -105,6 +79,54 @@ class ImageApp
   def escape(string)
     string = Stringex::Unidecoder.decode(string)
     string = CGI.escapeHTML(string)
+  end
+
+  def build_command(exec, src, post)
+    command = [exec]
+
+    # set source from the image path
+    post['s'] ||= src
+
+
+    command = [annotate_script]
+    %w{a d s t}.each do |param|
+      if post.has_key?(param)
+        command << "-#{param}"
+        command << post[param]
+      end
+    end
+    if post.has_key?('Tags')
+      post['Tags'].split(',').map(&:to_s).each do |tag|
+        tag.strip!
+        command << '-T' << tag unless tag.empty?
+      end
+    end
+
+    command << '-n' # no gui
+    command << '-o'
+    command << filename(src, post['key'] || 'image')
+
+    command
+  end
+
+  def spawn(command, image, directory)
+    r, w = IO.pipe
+    re, we = IO.pipe
+    pid = Process.spawn(*command, :in => r, :out => we, :err => we, :chdir => directory)
+    r.close
+    we.close
+
+    w.write(image)
+    w.close
+
+    err = re.read
+
+    pid, status = Process.waitpid2(pid)
+    if status.exitstatus == 0
+      [true,  nil]
+    else
+      [false, err]
+    end
   end
 
   def bad_request(reason="Bad request")
