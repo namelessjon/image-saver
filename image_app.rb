@@ -3,6 +3,10 @@ require 'rack'
 require 'open-uri'
 require 'rack/singleshot'
 require 'optparse'
+require 'stringex/string_extensions'
+require 'stringex/localization'
+require 'stringex/unidecoder'
+require 'cgi'
 
 
 class ImageApp
@@ -32,6 +36,11 @@ class ImageApp
         locals['key'] = locals['t'].downcase.strip.gsub(/\s+/,"_").gsub(/\W+/,'')
       else
         locals['key'] = 'image'
+      end
+
+      # escape and encode everything!
+      %w{tags a d s t i w h}.each do |key|
+        locals[key] = escape(locals[key].to_s) if locals[key]
       end
 
 
@@ -91,6 +100,11 @@ class ImageApp
     response.finish
   rescue Exception => e
     bad_request("#{e.class} - #{e.inspect}")
+  end
+
+  def escape(string)
+    string = Stringex::Unidecoder.decode(string)
+    string = CGI.escapeHTML(string)
   end
 
   def bad_request(reason="Bad request")
