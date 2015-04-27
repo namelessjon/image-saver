@@ -174,11 +174,11 @@ class Parser
         args.server = true
       end
 
-      opts.on("-pPORT", "--port=PORT", "Port to run persistant server on (Defaults to 8765)") do |port|
+      opts.on("-pPORT", "--port=PORT", "Port for persistant server to listen on (Defaults to 8765)") do |port|
         args.port = port.to_i
       end
 
-      opts.on("-HHOST", "--host=HOST", "Host for persistant port to listen to (Defaults to localhost)") do |host|
+      opts.on("-HHOST", "--host=HOST", "Host for persistant server to listen to (Defaults to localhost)") do |host|
         args.host = host
       end
 
