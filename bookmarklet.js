@@ -41,6 +41,11 @@
     title  = $('h3.title').text();
     desc   = $('div.description').text();
   }
+  if (/drawcrowd\.com/.test(source)) {
+    title   = $.trim($('.project-title').text());
+    artist  = $.trim($('div.owner-username a').text());
+    desc    = $.trim($('div.project__description').text());
+  }
   var setFields = function (url, meta, image) {
 
     for (var field in meta) {
