@@ -36,13 +36,6 @@
       img.src = i.href;
     }
   }
-  if (/cghub\.com/.test(source)) {
-    var spec = $('h3.bcrumps a');
-    artist = spec[1].innerHTML;
-    title = spec[2].innerHTML;
-    img.src = $('div.main-image a.full_size')[0].href;
-
-  }
   if (/artstation\.com/.test(source)) {
     artist = $('.artwork-info .artist .name a').text();
     title  = $('h3.title').text();
