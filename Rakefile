@@ -14,7 +14,7 @@ file 'bm.min.js' => 'bookmarklet.js' do |t|
 
     # write out the wrapped file
     File.open(t.name, "w") do |f|
-      f.puts "javascript:(#{contents})"
+      f.puts "javascript:#{contents}"
     end
 
   ensure
