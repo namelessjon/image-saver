@@ -38,13 +38,13 @@
   }
   if (/artstation\.com/.test(source)) {
     artist = $('.artwork-info .artist .name a').text();
-    title  = $('h3.title').text();
+    title  = $('h3.ng-binding').text();
     desc   = $('div.description').text();
   }
   if (/drawcrowd\.com/.test(source)) {
     title   = $.trim($('.project-title').text());
-    artist  = $.trim($('div.owner-username a').text());
-    desc    = $.trim($('div.project__description').text());
+    artist  = $.trim($('span.project-user-name').text());
+    desc    = $.trim($('div.overlay_project-description').text());
   }
   var setFields = function (url, meta, image) {
 
