@@ -30,7 +30,8 @@ class ImageApp
 
 
     if request.get?
-      locals = {:uri => uri(request), 'tags' => nil, 'a' => nil, 'd' => nil, 's' => nil, 't' => nil, 'i' => nil, 'w' => nil, 'h' => nil}.merge(request.GET)
+      locals = { 'tags' => nil, 'a' => nil, 'd' => nil, 's' => nil, 't' => nil, 'i' => nil, 'w' => nil, 'h' => nil}.merge(request.GET)
+      locals['uri'] = uri(request)
       set_ratio(locals)
       if locals['t'] && !locals['t'].empty?
         locals['key'] = locals['t'].downcase.strip.gsub(/\s+/,"_").gsub(/\W+/,'')
@@ -66,14 +67,14 @@ class ImageApp
 
       success, err = spawn(command, img, download_dir)
 
-      return bad_request("#{src}\n#{err.inspect}") unless success
+      return bad_request("#{src}\n#{err.inspect}\n#{err.backtrace.join("\n")}") unless success
       response.write('<html><body><script>window.close();</script></body></html>')
     else
       response.status = 405
     end
     response.finish
   rescue Exception => e
-    bad_request("#{e.class} - #{e.inspect}")
+    bad_request("#{e.class} - #{e.inspect} - #{e.backtrace.join("\n")}")
   end
 
   def escape(string)
