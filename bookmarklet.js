@@ -38,7 +38,7 @@
   }
   if (/artstation\.com/.test(source)) {
     artist = $('.artwork-info .artist .name a').text();
-    title  = $('h3.ng-binding').text();
+    title  = $('.artwork-info > h3').text();
     desc   = $('div.description').text();
   }
   if (/drawcrowd\.com/.test(source)) {
