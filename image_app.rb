@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'tilt/string'
 require 'rack'
 require 'open-uri'
