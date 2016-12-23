@@ -1,0 +1,17 @@
+{
+  "name" : "ImageSaver",
+  "version" : "0.0.1",
+  "description" : "The chrome extension for the image saving application",
+  "background" : { "scripts": ["background.js"] },
+  "permissions" : [
+    "contextMenus",
+    "activeTab"
+   ],
+  "minimum_chrome_version" : "50.0.0.0",
+  "icons" : {
+    "16" : "save-16.png",
+    "48" : "save-48.png",
+    "128" : "save-128.png"
+  },
+  "manifest_version": 2
+}
