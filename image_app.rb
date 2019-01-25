@@ -68,7 +68,7 @@ class ImageApp
 
       success, err = spawn(command, img, download_dir)
 
-      return bad_request("#{src}\n#{err.inspect}\n#{err.backtrace.join("\n")}") unless success
+      return bad_request("#{src}\n#{err}") unless success
       response.write('<html><body><script>window.close();</script></body></html>')
     else
       response.status = 405
